@@ -4,14 +4,13 @@ using module @{ModuleName='PSFalcon';ModuleVersion ='2.2'}
 <#
 .SYNOPSIS
 Output host information, but replace identifiers with their relevant 'name' value
+.PARAMETER Hostname
+Export a specific device by hostname
 .NOTES
 Fields in the output can be defined by updating the '$Field' variable. Output is returned to the console, but
 can be piped to a file.
-.PARAMETER Hostname
-The specific hostname to filter the host information.
 #>
-
-Param (
+param(
     [string]$Hostname
 )
 
@@ -20,11 +19,10 @@ Param (
 $Field += 'device_policies','groups'
 
 # Retrieve all host information and filter to selected fields
-$HostInfo = Get-FalconHost -Detailed -All | Select-Object $Field
-
-# Filter by hostname if the parameter is provided
-if ($Hostname) {
-    $HostInfo = $HostInfo | Where-Object { $_.hostname -eq $Hostname }
+$HostInfo = if ($Hostname) {
+  Get-FalconHost -Filter "hostname:'$Hostname'" -Detailed | Select-Object $Field
+} else {
+  Get-FalconHost -Detailed -All | Select-Object $Field
 }
 
 if ($HostInfo) {
